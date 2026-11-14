@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>JARVIS</title>
+<link rel='manifest' href='manifest.json'>
+<link rel='icon' href='icon.svg'>
+<meta name='theme-color' content='#020b14'>
+<style>
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:#020b14;color:#bfefff;font-family:system-ui,sans-serif;height:100vh;height:100dvh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #0a3a55;flex-wrap:wrap}
+.orb{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle,#7df 0%,#08c 60%,#046 100%);box-shadow:0 0 18px #0cf;animation:p 3s infinite}
+.orb.listen{animation:p .8s infinite;background:radial-gradient(circle,#fff 0%,#5f9 60%,#064 100%);box-shadow:0 0 22px #5f9}
+@keyframes p{50%{transform:scale(1.15)}}
+h1{font-size:18px;letter-spacing:6px;margin:0;flex:1}
+button{background:#06283d;color:#9ef;border:1px solid #0a5a85;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:14px}
+button.on{background:#0a6a45;color:#fff}
+#log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:88%;padding:10px 14px;border-radius:12px;line-height:1.45;white-space:pre-wrap}
+.u{align-self:flex-end;background:#0a3a55}.j{align-self:flex-start;background:#04202f;border:1px solid #0a4a6a}
+footer{display:flex;gap:8px;padding:12px;border-top:1px solid #0a3a55}
+input[type=text],input[type=password]{flex:1;background:#04202f;color:#dff;border:1px solid #0a5a85;border-radius:8px;padding:12px;font-size:16px;min-width:0}
+#set{padding:12px 14px;border-bottom:1px solid #0a3a55;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px}
+#st{font-size:12px;opacity:.7}
+</style>
+</head>
+<body>
+<header>
+<div id='orb' class='orb'></div><h1>JARVIS</h1><span id='st'>ready</span>
+<button id='hf'>Hands-free: off</button><button id='gear'>Settings</button>
+</header>
+<div id='set' hidden>
+<input type='password' id='key' placeholder='Optional: free Gemini API key (aistudio.google.com)'>
+<label><input type='checkbox' id='mute'> Mute voice</label>
+<button id='save'>Save</button><button id='wipe'>Erase memory</button>
+</div>
+<div id='log'></div>
+<footer>
+<input type='text' id='in' placeholder='Type, or say: Jarvis, ...' autocomplete='off'>
+<button id='mk'>Talk</button><button id='go'>Send</button>
+</footer>
+<script>
+const $=id=>document.getElementById(id);
+const log=$('log'),orb=$('orb'),st=$('st');
+const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+let hist=ld('jh',[]),notes=ld('jn',[]),cfg=ld('jc',{});
+let always=false,speaking=false,awake=false,rec=null;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const sv=()=>{localStorage.setItem('jh',JSON.stringify(hist));localStorage.setItem('jn',JSON.stringify(notes));localStorage.setItem('jc',JSON.stringify(cfg))};
+function add(t,c){const d=document.createElement('div');d.className='m '+c;d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+function say(t){
+if(cfg.mute||!window.speechSynthesis)return;
+speechSynthesis.cancel();
+const u=new SpeechSynthesisUtterance(t.slice(0,600));
+const vs=speechSynthesis.getVoices();
+const v=vs.find(x=>x.lang=='en-GB'&&/male|daniel|ryan/i.test(x.name))||vs.find(x=>x.lang=='en-GB')||vs.find(x=>x.lang.startsWith('en'));
+if(v)u.voice=v;
+u.onstart=()=>{speaking=true;if(rec)try{rec.abort()}catch(e){}};
+u.onend=u.onerror=()=>{speaking=false;setTimeout(startRec,300)};
+speechSynthesis.speak(u)}
+const sites={youtube:'https://youtube.com',google:'https://google.com',gmail:'https://mail.google.com',github:'https://github.com',maps:'https://maps.google.com',whatsapp:'https://web.whatsapp.com',instagram:'https://instagram.com',calendar:'https://calendar.google.com',drive:'https://drive.google.com',news:'https://news.google.com',translate:'https://translate.google.com'};
+async function local(q){
+const l=q.toLowerCase().replace(/[?.!,]/g,'').trim();
+if(l=='clear chat'||l=='clear screen'){log.innerHTML='';hist=[];sv();return 'Cleared, sir.'}
+if(l.includes('what time')||l=='time')return 'It is '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+', sir.';
+if(l.includes('what day')||l.includes('date today')||l=='date')return 'Today is '+new Date().toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'})+'.';
+if(l.startsWith('remember ')){notes.push(q.trim().slice(9));sv();return 'Noted, sir.'}
+if(l.includes('my notes')||l.includes('what do you remember'))return notes.length?notes.map((n,i)=>(i+1)+'. '+n).join('\n'):'I have no notes yet, sir.';
+if(l=='clear notes'){notes=[];sv();return 'Notes erased.'}
+if(l.includes('timer')){const m=l.match(/([0-9]+)/);if(m){const n=+m[1];const mu=l.includes('second')?1:l.includes('hour')?3600:60;
+setTimeout(()=>{const t='Sir, your timer is up.';add(t,'j');say(t);try{new Notification('JARVIS',{body:t})}catch(e){}},n*mu*1000);
+return 'Timer set for '+n+(mu==1?' seconds':mu==60?' minutes':' hours')+'.'}}
+if(l.includes('weather')||l.includes('temperature outside')){
+return new Promise(res=>navigator.geolocation.getCurrentPosition(async p=>{try{
+const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+p.coords.latitude+'&longitude='+p.coords.longitude+'&current=temperature_2m,wind_speed_10m');
+const j=await r.json();res('It is '+j.current.temperature_2m+' degrees Celsius, wind '+j.current.wind_speed_10m+' kilometres per hour, sir.')}catch(e){res('The weather service is unreachable, sir.')}},()=>res('I need location permission for the weather, sir.')))}
+if(l.startsWith('open ')){const k=l.slice(5).trim();window.open(sites[k]||'https://www.google.com/search?q='+encodeURIComponent(k),'_blank');return 'Opening '+k+', sir.'}
+if(l.startsWith('google ')||l.startsWith('search for ')){const k=l.replace('search for ','').replace('google ','');window.open('https://www.google.com/search?q='+encodeURIComponent(k),'_blank');return 'Searching for '+k+', sir.'}
+return null}
+const sysP=()=>`You are JARVIS, a witty, concise, highly capable personal AI assistant like Tony Stark's. Address the user as sir. Keep answers under 80 words unless asked for detail. Plain text only, no markdown. Today is ${new Date().toDateString()}. Things the user asked you to remember: ${notes.join('; ')||'none'}.`;
+async function gem(){
+const body={systemInstruction:{parts:[{text:sysP()}]},contents:hist.map(h=>({role:h.role=='assistant'?'model':'user',parts:[{text:h.content}]}))};
+const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+cfg.key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+const j=await r.json();return j.candidates[0].content.parts[0].text}
+async function poll(){
+const r=await fetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'openai',messages:[{role:'system',content:sysP()},...hist]})});
+const j=await r.json();return j.choices[0].message.content}
+async function ask(q){
+hist.push({role:'user',content:q});hist=hist.slice(-14);
+let out=null;
+if(cfg.key){try{out=await gem()}catch(e){}}
+if(!out){try{out=await poll()}catch(e){}}
+if(!out)out='My connection to the language core failed, sir. Check the internet, or add a free Gemini key in Settings.';
+hist.push({role:'assistant',content:out});sv();return out}
+async function run(q){
+add(q,'u');st.textContent='thinking...';
+let r=null;try{r=await local(q)}catch(e){}
+if(!r)r=await ask(q);
+st.textContent='ready';add(r,'j');say(r)}
+function handleVoice(t){
+const l=t.toLowerCase();
+if(awake||l.includes('jarvis')||l.includes('travis')){
+const q=t.replace(/jarvis|travis/ig,'').replace(/^[ ,.]+/,'').trim();
+if(!q){awake=true;const r='Yes, sir?';add(r,'j');say(r);return}
+awake=false;run(q)}else{st.textContent='heard: '+t}}
+function startRec(){
+if(!SR||!always||speaking||(rec&&rec.active))return;
+rec=new SR();rec.lang='en-US';rec.continuous=false;rec.interimResults=false;
+rec.onresult=e=>handleVoice(e.results[0][0].transcript.trim());
+rec.onend=()=>{rec.active=false;orb.classList.remove('listen');if(always&&!speaking)setTimeout(startRec,300)};
+rec.onerror=()=>{};
+try{rec.start();rec.active=true;orb.classList.add('listen')}catch(e){}}
+$('hf').onclick=()=>{
+if(!SR){add('Voice input needs Google Chrome or Edge, sir. Typing still works.','j');return}
+always=!always;$('hf').classList.toggle('on',always);$('hf').textContent='Hands-free: '+(always?'on (say Jarvis)':'off');
+try{Notification.requestPermission()}catch(e){}
+if(always)startRec();else if(rec)try{rec.abort()}catch(e){}};
+$('mk').onclick=()=>{
+if(!SR){add('Voice input needs Google Chrome or Edge, sir.','j');return}
+const r=new SR();r.lang='en-US';r.onresult=e=>run(e.results[0][0].transcript.trim());r.onend=()=>orb.classList.remove('listen');
+orb.classList.add('listen');try{r.start()}catch(e){}};
+const send=()=>{const v=$('in').value.trim();if(v){$('in').value='';run(v)}};
+$('go').onclick=send;$('in').onkeydown=e=>{if(e.key=='Enter')send()};
+$('gear').onclick=()=>{$('set').hidden=!$('set').hidden};
+$('key').value=cfg.key||'';$('mute').checked=!!cfg.mute;
+$('save').onclick=()=>{cfg.key=$('key').value.trim();cfg.mute=$('mute').checked;sv();$('set').hidden=true;add('Settings saved, sir.','j')};
+$('wipe').onclick=()=>{hist=[];notes=[];sv();log.innerHTML='';add('Memory erased.','j')};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+add('JARVIS online. Type below, press Talk, or switch on Hands-free and say: Jarvis, what is the weather?','j');
+if(window.speechSynthesis)speechSynthesis.onvoiceschanged=()=>{};
+</script>
+</body>
+</html>
