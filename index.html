@@ -3,138 +3,265 @@
 <head>
 <meta charset='utf-8'>
 <meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>JARVIS</title>
+<title>JARVIS Office</title>
 <link rel='manifest' href='manifest.json'>
 <link rel='icon' href='icon.svg'>
 <meta name='theme-color' content='#020b14'>
 <style>
 *{box-sizing:border-box}[hidden]{display:none!important}
-body{margin:0;background:#020b14;color:#bfefff;font-family:system-ui,sans-serif;height:100vh;height:100dvh;display:flex;flex-direction:column}
-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #0a3a55;flex-wrap:wrap}
-.orb{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle,#7df 0%,#08c 60%,#046 100%);box-shadow:0 0 18px #0cf;animation:p 3s infinite}
-.orb.listen{animation:p .8s infinite;background:radial-gradient(circle,#fff 0%,#5f9 60%,#064 100%);box-shadow:0 0 22px #5f9}
+body{margin:0;background:#020b14;color:#bfefff;font-family:system-ui,sans-serif;height:100vh;height:100dvh}
+#app{display:flex;height:100%}
+aside{width:230px;border-right:1px solid #0a3a55;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+section{flex:1;display:flex;flex-direction:column;min-height:0}
+.brand{display:flex;align-items:center;gap:10px;letter-spacing:3px;font-size:14px}
+.orb{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#7df,#08c 60%,#046);box-shadow:0 0 14px #0cf;animation:p 3s infinite}
+.orb.listen{background:radial-gradient(circle,#fff,#5f9 60%,#064);box-shadow:0 0 18px #5f9;animation:p .8s infinite}
 @keyframes p{50%{transform:scale(1.15)}}
-h1{font-size:18px;letter-spacing:6px;margin:0;flex:1}
-button{background:#06283d;color:#9ef;border:1px solid #0a5a85;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:14px}
+button{background:#06283d;color:#9ef;border:1px solid #0a5a85;border-radius:8px;padding:8px 10px;cursor:pointer;font-size:14px;text-align:left}
 button.on{background:#0a6a45;color:#fff}
+.ag.on{background:#0a4a6a}.ag small{display:block;opacity:.65;font-size:11px}
+.busy{animation:p 1s infinite;border-color:#5f9}
+#roster{display:flex;flex-direction:column;gap:6px}
+.sb{display:flex;gap:6px;flex-wrap:wrap}
 a{color:#6df}
-#log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-.m{max-width:88%;padding:10px 14px;border-radius:12px;line-height:1.45;white-space:pre-wrap}
+.who{padding:12px 14px;border-bottom:1px solid #0a3a55;display:flex;justify-content:space-between;align-items:center}
+#log,#rlog,#tasks,#replist{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:90%;padding:10px 14px;border-radius:12px;line-height:1.45;white-space:pre-wrap}
+.nm{font-size:12px;opacity:.7;margin-bottom:4px}
 .u{align-self:flex-end;background:#0a3a55}.j{align-self:flex-start;background:#04202f;border:1px solid #0a4a6a}
-footer{display:flex;gap:8px;padding:12px;border-top:1px solid #0a3a55}
-input[type=text],input[type=password]{flex:1;background:#04202f;color:#dff;border:1px solid #0a5a85;border-radius:8px;padding:12px;font-size:16px;min-width:0}
+footer,.row{display:flex;gap:8px;padding:12px;border-top:1px solid #0a3a55}
+input[type=text],input[type=password],textarea{flex:1;background:#04202f;color:#dff;border:1px solid #0a5a85;border-radius:8px;padding:12px;font-size:16px;min-width:0;font-family:inherit}
 #set{padding:12px 14px;border-bottom:1px solid #0a3a55;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px}
 #set p{margin:0;width:100%}
-#st{font-size:12px;opacity:.7}
+#cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start}
+.col{background:#04202f;border:1px solid #0a3a55;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:8px}
+.col h3{margin:0;font-size:13px;letter-spacing:2px}
+.card{background:#06283d;border-radius:8px;padding:8px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.card button{padding:4px 8px;font-size:12px}.bar{display:flex;gap:4px;flex-wrap:wrap}
+details{background:#04202f;border:1px solid #0a3a55;border-radius:8px;padding:10px;white-space:pre-wrap}
+summary{cursor:pointer}
+@media(max-width:760px){#app{flex-direction:column}aside{width:auto;max-height:42%;border-right:0;border-bottom:1px solid #0a3a55}#roster{flex-direction:row;flex-wrap:wrap}#cols{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header>
-<div id='orb' class='orb'></div><h1>JARVIS</h1><span id='st'>ready</span>
-<button id='hf'>Hands-free: off</button><button id='gear'>Settings</button>
-</header>
+<div id='app'>
+<aside>
+<div class='brand'><div id='orb' class='orb'></div><b>JARVIS OFFICE</b></div>
+<div class='sb'><button class='on' data-v='chat'>Office</button><button data-v='room'>Boardroom</button><button data-v='tasks'>Tasks</button><button data-v='reports'>Reports</button></div>
+<div id='roster'></div>
+<button id='addag'>+ Hire agent</button>
+<div class='sb'><button id='hf'>Hands-free: off</button><button id='gear'>Settings</button></div>
+<small id='st'>ready</small>
+</aside>
+<main>
 <div id='set' hidden>
-<p>Free AI brain: <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener'>create a free Gemini key here</a> (no card needed), paste it below, press Save. Stored only in this browser.</p>
+<p>Free AI brain: <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener'>create a free Gemini key</a> (no card), paste it, press Save. Stored only in this browser.</p>
 <input type='password' id='key' placeholder='Paste Gemini API key'>
 <label><input type='checkbox' id='mute'> Mute voice</label>
-<button id='save'>Save</button><button id='wipe'>Erase memory</button>
+<button id='save'>Save</button><button id='wipe'>Reset office</button>
 </div>
+<section id='v-chat'>
+<div class='who'><b id='ch'></b><button id='rm'>Dismiss agent</button></div>
 <div id='log'></div>
-<footer>
-<input type='text' id='in' placeholder='Type, or say: Jarvis, ...' autocomplete='off'>
-<button id='mk'>Talk</button><button id='go'>Send</button>
-</footer>
+<footer><input type='text' id='in' placeholder='Talk to this agent. With Jarvis you can also say: Jarvis, convene the team to...' autocomplete='off'><button id='mk'>Talk</button><button id='go'>Send</button></footer>
+</section>
+<section id='v-room' hidden>
+<div class='row'><textarea id='goal' rows='3' placeholder='Give the office a goal, e.g. Plan the launch of my consulting service with a 3-month budget and hiring plan'></textarea><button id='conv'>Convene team</button></div>
+<div id='rlog'></div>
+</section>
+<section id='v-tasks' hidden>
+<div class='row'><input type='text' id='newt' placeholder='Add a task'><button id='addt'>Add</button></div>
+<div id='tasks'><div id='cols'></div></div>
+</section>
+<section id='v-reports' hidden><div id='replist'></div></section>
+</main>
+</div>
 <script>
 const $=id=>document.getElementById(id);
-const log=$('log'),orb=$('orb'),st=$('st');
+const G='https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=';
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
-let hist=ld('jh',[]),notes=ld('jn',[]),cfg=ld('jc',{});
-let always=false,speaking=false,awake=false,rec=null;
+const DEF=[
+{id:'jarvis',name:'Jarvis',emoji:'🤖',role:'Chief of Staff',prompt:'You are JARVIS, chief of staff of a virtual office. Witty, concise, address the user as sir. If a request needs several specialists, tell the user to use the Boardroom tab or say: convene the team to, followed by the goal.'},
+{id:'analyst',name:'Ava',emoji:'📊',role:'Data Analyst',prompt:'You are Ava, a sharp data and business analyst. You find patterns, quantify, state assumptions and give clear recommendations.'},
+{id:'acct',name:'Max',emoji:'💰',role:'Accountant',prompt:'You are Max, a meticulous accountant and financial planner. You handle budgets, costs, cash flow, tax basics and ROI. Show the numbers and flag risks.'},
+{id:'mgr',name:'Priya',emoji:'📋',role:'Project Manager',prompt:'You are Priya, an experienced project manager. You break goals into milestones, owners, timelines, risks and next actions.'},
+{id:'hr',name:'Sam',emoji:'👥',role:'HR Manager',prompt:'You are Sam, an HR manager. You handle hiring, onboarding, policies, performance and team culture.'},
+{id:'res',name:'Leo',emoji:'🔎',role:'Researcher',prompt:'You are Leo, a thorough researcher. You gather key facts, compare options, note uncertainty and never invent sources.'},
+{id:'write',name:'Mia',emoji:'✍',role:'Writer',prompt:'You are Mia, a professional writer. You draft clear emails, reports, posts and presentations.'},
+{id:'strat',name:'Zane',emoji:'♟',role:'Strategist',prompt:'You are Zane, a business strategist. You weigh options and trade-offs, think long term, and challenge weak assumptions.'}];
+let cfg=ld('jc',{}),notes=ld('jn',[]),S=ld('office',null);
+if(!S)S={agents:DEF,chats:{},tasks:[],reports:[]};
+let cur='jarvis',always=false,speaking=false,awake=false,rec=null;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-const sv=()=>{localStorage.setItem('jh',JSON.stringify(hist));localStorage.setItem('jn',JSON.stringify(notes));localStorage.setItem('jc',JSON.stringify(cfg))};
-function add(t,c){const d=document.createElement('div');d.className='m '+c;d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+const save=()=>{localStorage.setItem('office',JSON.stringify(S));localStorage.setItem('jc',JSON.stringify(cfg));localStorage.setItem('jn',JSON.stringify(notes))};
+const ag=id=>S.agents.find(a=>a.id==id)||S.agents[0];
+const wait=ms=>new Promise(z=>setTimeout(z,ms));
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function post(box,t,c,a){const d=el('div','m '+c);if(a)d.appendChild(el('div','nm',a.emoji+' '+a.name+' - '+a.role));d.appendChild(el('div','',t));box.appendChild(d);box.scrollTop=box.scrollHeight;return d}
+function busy(id,on){const b=document.querySelector('[data-a="'+id+'"]');if(b)b.classList.toggle('busy',on)}
 function say(t){
 if(cfg.mute||!window.speechSynthesis)return;
 speechSynthesis.cancel();
-const u=new SpeechSynthesisUtterance(t.slice(0,600));
+const u=new SpeechSynthesisUtterance(t.slice(0,500));
 const vs=speechSynthesis.getVoices();
 const v=vs.find(x=>x.lang=='en-GB'&&/male|daniel|ryan/i.test(x.name))||vs.find(x=>x.lang=='en-GB')||vs.find(x=>x.lang.startsWith('en'));
 if(v)u.voice=v;
 u.onstart=()=>{speaking=true;if(rec)try{rec.abort()}catch(e){}};
 u.onend=u.onerror=()=>{speaking=false;setTimeout(startRec,300)};
 speechSynthesis.speak(u)}
-const sites={youtube:'https://youtube.com',google:'https://google.com',gmail:'https://mail.google.com',github:'https://github.com',maps:'https://maps.google.com',whatsapp:'https://web.whatsapp.com',instagram:'https://instagram.com',calendar:'https://calendar.google.com',drive:'https://drive.google.com',news:'https://news.google.com',translate:'https://translate.google.com'};
+async function llm(sys,msgs,json){
+for(let i=0;i<4;i++){
+const body={systemInstruction:{parts:[{text:sys}]},contents:msgs.map(m=>({role:m.role=='assistant'?'model':'user',parts:[{text:m.content}]}))};
+if(json)body.generationConfig={responseMimeType:'application/json'};
+const r=await fetch(G+cfg.key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+const j=await r.json();
+if(j.error){if(r.status==429&&i<3){await wait(6000*(i+1));continue}throw new Error(j.error.message)}
+return j.candidates[0].content.parts[0].text}}
+const ctx=()=>' Today is '+new Date().toDateString()+'. Colleagues: '+S.agents.map(a=>a.name+' ('+a.role+')').join(', ')+'. Things the user asked to remember: '+(notes.join('; ')||'none')+'. Plain text only, no markdown, concise.';
+function renderRoster(){
+const r=$('roster');r.innerHTML='';
+S.agents.forEach(a=>{const b=el('button','ag'+(a.id==cur?' on':''),a.emoji+' '+a.name);b.setAttribute('data-a',a.id);b.appendChild(el('small','',a.role));b.onclick=()=>{cur=a.id;renderRoster();show('chat')};r.appendChild(b)})}
+function renderChat(){
+const a=ag(cur);$('ch').textContent=a.emoji+' '+a.name+' - '+a.role;$('rm').hidden=cur=='jarvis';
+const l=$('log');l.innerHTML='';
+const h=S.chats[cur]||[];
+if(!h.length)post(l,'Hello sir, I am '+a.name+', your '+a.role+'. How can I help?','j',a);
+h.forEach(m=>post(l,m.content,m.role=='user'?'u':'j',m.role=='user'?null:a))}
+function show(v){
+['chat','room','tasks','reports'].forEach(x=>{$('v-'+x).hidden=x!=v;document.querySelector('[data-v='+x+']').classList.toggle('on',x==v)});
+if(v=='tasks')renderTasks();if(v=='reports')renderReports();if(v=='chat')renderChat()}
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>show(b.getAttribute('data-v')));
+const needKey=()=>{$('set').hidden=false;return 'This office runs on a free Gemini key, sir. Use the link in Settings, paste the key, press Save.'};
+const sites={youtube:'https://youtube.com',google:'https://google.com',gmail:'https://mail.google.com',github:'https://github.com',maps:'https://maps.google.com',whatsapp:'https://web.whatsapp.com',instagram:'https://instagram.com',calendar:'https://calendar.google.com',drive:'https://drive.google.com',news:'https://news.google.com'};
 async function local(q){
 const l=q.toLowerCase().replace(/[?.!,]/g,'').trim();
-if(l=='clear chat'||l=='clear screen'){log.innerHTML='';hist=[];sv();return 'Cleared, sir.'}
 if(l.includes('what time')||l=='time')return 'It is '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+', sir.';
 if(l.includes('what day')||l.includes('date today')||l=='date')return 'Today is '+new Date().toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'})+'.';
-if(l.startsWith('remember ')){notes.push(q.trim().slice(9));sv();return 'Noted, sir.'}
-if(l.includes('my notes')||l.includes('what do you remember'))return notes.length?notes.map((n,i)=>(i+1)+'. '+n).join('\n'):'I have no notes yet, sir.';
-if(l=='clear notes'){notes=[];sv();return 'Notes erased.'}
+if(l.startsWith('remember ')){notes.push(q.trim().slice(9));save();return 'Noted, sir.'}
+if(l.includes('my notes')||l.includes('what do you remember'))return notes.length?notes.map((n,i)=>(i+1)+'. '+n).join(' | '):'I have no notes yet, sir.';
+if(l=='clear notes'){notes=[];save();return 'Notes erased.'}
 if(l.includes('timer')){const m=l.match(/([0-9]+)/);if(m){const n=+m[1];const mu=l.includes('second')?1:l.includes('hour')?3600:60;
-setTimeout(()=>{const t='Sir, your timer is up.';add(t,'j');say(t);try{new Notification('JARVIS',{body:t})}catch(e){}},n*mu*1000);
+setTimeout(()=>{const t='Sir, your timer is up.';post($('log'),t,'j',ag('jarvis'));say(t);try{new Notification('JARVIS',{body:t})}catch(e){}},n*mu*1000);
 return 'Timer set for '+n+' '+(mu==1?'second':mu==60?'minute':'hour')+(n==1?'':'s')+'.'}}
-if(l.includes('weather')||l.includes('temperature outside')){
+if(l.includes('weather')){
 return new Promise(res=>navigator.geolocation.getCurrentPosition(async p=>{try{
 const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+p.coords.latitude+'&longitude='+p.coords.longitude+'&current=temperature_2m,wind_speed_10m');
-const j=await r.json();res('It is '+j.current.temperature_2m+' degrees Celsius, wind '+j.current.wind_speed_10m+' kilometres per hour, sir.')}catch(e){res('The weather service is unreachable, sir.')}},()=>res('I need location permission for the weather, sir.')))}
+const j=await r.json();res('It is '+j.current.temperature_2m+' degrees Celsius, wind '+j.current.wind_speed_10m+' km/h, sir.')}catch(e){res('The weather service is unreachable, sir.')}},()=>res('I need location permission for the weather, sir.')))}
 if(l.startsWith('open ')){const k=l.slice(5).trim();window.open(sites[k]||'https://www.google.com/search?q='+encodeURIComponent(k),'_blank');return 'Opening '+k+', sir.'}
 if(l.startsWith('google ')||l.startsWith('search for ')){const k=l.replace('search for ','').replace('google ','');window.open('https://www.google.com/search?q='+encodeURIComponent(k),'_blank');return 'Searching for '+k+', sir.'}
 return null}
-const sysP=()=>`You are JARVIS, a witty, concise, highly capable personal AI assistant like Tony Stark's. Address the user as sir. Keep answers under 80 words unless asked for detail. Plain text only, no markdown. Today is ${new Date().toDateString()}. Things the user asked you to remember: ${notes.join('; ')||'none'}.`;
-async function gem(){
-const body={systemInstruction:{parts:[{text:sysP()}]},contents:hist.map(h=>({role:h.role=='assistant'?'model':'user',parts:[{text:h.content}]}))};
-const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+cfg.key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-const j=await r.json();
-if(j.error)throw new Error(j.error.message);
-return j.candidates[0].content.parts[0].text}
-async function poll(){
-const r=await fetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'openai',messages:[{role:'system',content:sysP()},...hist]})});
-const j=await r.json();return j.choices[0].message.content}
-async function ask(q){
-hist.push({role:'user',content:q});hist=hist.slice(-14);
-let out=null,err='';
-if(cfg.key){try{out=await gem()}catch(e){err=e.message}}
-if(!out&&!cfg.key){try{out=await poll()}catch(e){}}
-if(!out){hist.pop();sv();$('set').hidden=false;
-return cfg.key?'Gemini rejected the request, sir: '+err:'My language core needs a free Gemini key, sir. Use the link in Settings above, paste the key, and press Save. About a minute, no cost.'}
-hist.push({role:'assistant',content:out});sv();return out}
+async function chat(a,q){
+const h=S.chats[a.id]=S.chats[a.id]||[];
+h.push({role:'user',content:q});
+try{const out=await llm(a.prompt+ctx(),h.slice(-14));h.push({role:'assistant',content:out});save();return out}
+catch(e){h.pop();return 'Gemini refused the request, sir: '+e.message}}
 async function run(q){
-add(q,'u');st.textContent='thinking...';
-let r=null;try{r=await local(q)}catch(e){}
-if(!r)r=await ask(q);
-st.textContent='ready';add(r,'j');say(r)}
+if(!cfg.key&&!q.toLowerCase().includes('time')){}
+let l=q.toLowerCase();
+const ask=S.agents.find(a=>l.startsWith('ask '+a.name.toLowerCase()+' '));
+if(ask){cur=ask.id;q=q.slice(5+ask.name.length);renderRoster()}
+if(l.startsWith('convene ')||l.startsWith('boardroom ')){show('room');$('goal').value=q.slice(q.indexOf(' ')+1);convene();return}
+show('chat');
+const box=$('log'),a=ag(cur);
+post(box,q,'u');busy(a.id,true);st.textContent=a.name+' is thinking...';
+let r=null;if(a.id=='jarvis'){try{r=await local(q)}catch(e){}}
+if(!r)r=cfg.key?await chat(a,q):needKey();
+busy(a.id,false);st.textContent='ready';post(box,r,'j',a);say(r)}
+async function convene(){
+const goal=$('goal').value.trim();if(!goal)return;
+const rl=$('rlog');rl.innerHTML='';
+const jv=ag('jarvis');
+if(!cfg.key){post(rl,needKey(),'j',jv);return}
+post(rl,goal,'u');
+try{
+busy('jarvis',true);post(rl,'Convening the team, sir...','j',jv);
+const team=S.agents.filter(a=>a.id!='jarvis');
+let plan={};
+try{plan=JSON.parse(await llm('You are Jarvis, chief of staff. Pick 2 to 4 specialists best suited to the goal, in working order. Reply ONLY with JSON having keys: plan (one sentence), agents (array of ids), asks (object mapping each id to what that person must deliver). Available: '+team.map(a=>a.id+'='+a.name+' the '+a.role).join('; '),[{role:'user',content:goal}],true))}catch(e){}
+let ids=(plan.agents||[]).filter(i=>team.some(a=>a.id==i)).slice(0,4);
+if(!ids.length)ids=team.slice(0,2).map(a=>a.id);
+post(rl,(plan.plan||'Assembling the team.')+' Bringing in: '+ids.map(i=>ag(i).name).join(', ')+'.','j',jv);busy('jarvis',false);
+const parts=[];
+for(const id of ids){
+const a=ag(id);busy(id,true);st.textContent=a.name+' is working...';
+const ask='Goal: '+goal+' Your task: '+((plan.asks||{})[id]||'give your expert view')+(parts.length?' Colleagues so far: '+parts.map(p=>p.name+': '+p.text).join(' || '):'');
+const text=await llm(a.prompt+' You are in a team meeting. Deliver your part in under 180 words, concrete and specific.'+ctx(),[{role:'user',content:ask}]);
+busy(id,false);parts.push({name:a.name,id,text});post(rl,text,'j',a)}
+busy('jarvis',true);st.textContent='Jarvis is summarising...';
+let fin={summary:'',tasks:[]};
+try{fin=JSON.parse(await llm('You are Jarvis, chief of staff. Combine the team input into an executive summary under 120 words with a clear recommendation, and list 3 to 6 concrete tasks. Reply ONLY with JSON having keys: summary (string), tasks (array of objects with title and owner, where owner is one of these ids: '+ids.join(', ')+', jarvis).',[{role:'user',content:'Goal: '+goal+' Team input: '+parts.map(p=>p.name+': '+p.text).join(' || ')}],true))}catch(e){fin.summary=parts.map(p=>p.text).join(' ')}
+busy('jarvis',false);st.textContent='ready';
+post(rl,'EXECUTIVE SUMMARY: '+fin.summary,'j',jv);say(fin.summary);
+(fin.tasks||[]).forEach(t=>S.tasks.push({id:Date.now()+Math.random(),title:t.title,owner:t.owner||'jarvis',s:'todo',goal}));
+S.reports.unshift({ts:Date.now(),goal,parts,summary:fin.summary});
+save();post(rl,'Tasks added to the Tasks board and the report saved under Reports.','j',jv)
+}catch(e){ids=[];document.querySelectorAll('.busy').forEach(b=>b.classList.remove('busy'));st.textContent='ready';post(rl,'The meeting hit a problem, sir: '+e.message,'j',jv)}}
+$('conv').onclick=convene;
+function renderTasks(){
+const c=$('cols');c.innerHTML='';
+[['todo','TO DO'],['doing','IN PROGRESS'],['done','DONE']].forEach(([s,n],ci)=>{
+const col=el('div','col');col.appendChild(el('h3','',n));
+S.tasks.filter(t=>t.s==s).forEach(t=>{
+const a=ag(t.owner);const card=el('div','card');
+card.appendChild(el('div','',t.title));card.appendChild(el('small','',a.emoji+' '+a.name));
+if(t.out){const d=el('details');d.appendChild(el('summary','','Result'));d.appendChild(el('div','',t.out));card.appendChild(d)}
+const bar=el('div','bar');
+const mv=(txt,f)=>{const b=el('button','',txt);b.onclick=f;bar.appendChild(b)};
+if(!t.out)mv('Work on it',async()=>{t.s='doing';save();renderTasks();busy(a.id,true);
+try{t.out=await llm(a.prompt+' Complete this task now, with the actual deliverable, under 200 words.'+ctx(),[{role:'user',content:'Task: '+t.title+(t.goal?'. Overall goal: '+t.goal:'')}]);t.s='done'}catch(e){t.out='Failed: '+e.message;t.s='todo'}
+busy(a.id,false);save();renderTasks()});
+if(ci>0)mv('<',()=>{t.s=['todo','doing','done'][ci-1];save();renderTasks()});
+if(ci<2)mv('>',()=>{t.s=['todo','doing','done'][ci+1];save();renderTasks()});
+mv('x',()=>{S.tasks=S.tasks.filter(z=>z!==t);save();renderTasks()});
+card.appendChild(bar);col.appendChild(card)});
+c.appendChild(col)})}
+$('addt').onclick=()=>{const v=$('newt').value.trim();if(!v)return;S.tasks.push({id:Date.now(),title:v,owner:'mgr',s:'todo'});$('newt').value='';save();renderTasks()};
+function renderReports(){
+const r=$('replist');r.innerHTML='';
+if(!S.reports.length)r.appendChild(el('div','','No reports yet. Convene the team in the Boardroom.'));
+S.reports.forEach(p=>{const d=el('details');d.appendChild(el('summary','',new Date(p.ts).toLocaleString()+' - '+p.goal));
+d.appendChild(el('div','','SUMMARY: '+p.summary));
+p.parts.forEach(x=>d.appendChild(el('div','',ag(x.id).emoji+' '+x.name+': '+x.text)));r.appendChild(d)})}
+$('addag').onclick=()=>{
+const name=prompt('Name of the new agent?');if(!name)return;
+const role=prompt('Job title? (for example Legal Advisor, Sales Lead, Site Engineer)');if(!role)return;
+const ins=prompt('Anything special this agent should know or do? (optional)')||'';
+const em=['🧠','🛠','📈','⚖','🎯','🧪','🏗'][S.agents.length%7];
+S.agents.push({id:'a'+Date.now(),name,emoji:em,role,prompt:'You are '+name+', a '+role+' in a virtual office. Act as a real expert in that field. '+ins});
+save();renderRoster()};
+$('rm').onclick=()=>{if(cur=='jarvis'||!confirm('Dismiss '+ag(cur).name+'?'))return;S.agents=S.agents.filter(a=>a.id!=cur);delete S.chats[cur];cur='jarvis';save();renderRoster();renderChat()};
 function handleVoice(t){
 const l=t.toLowerCase();
 if(awake||l.includes('jarvis')||l.includes('travis')){
 const q=t.replace(/jarvis|travis/ig,'').replace(/^[ ,.]+/,'').trim();
-if(!q){awake=true;const r='Yes, sir?';add(r,'j');say(r);return}
-awake=false;run(q)}else{st.textContent='heard: '+t}}
+if(!q){awake=true;const r='Yes, sir?';post($('log'),r,'j',ag('jarvis'));say(r);return}
+awake=false;run(q)}else{$('st').textContent='heard: '+t}}
 function startRec(){
 if(!SR||!always||speaking||(rec&&rec.active))return;
 rec=new SR();rec.lang='en-US';rec.continuous=false;rec.interimResults=false;
 rec.onresult=e=>handleVoice(e.results[0][0].transcript.trim());
-rec.onend=()=>{rec.active=false;orb.classList.remove('listen');if(always&&!speaking)setTimeout(startRec,300)};
+rec.onend=()=>{rec.active=false;$('orb').classList.remove('listen');if(always&&!speaking)setTimeout(startRec,300)};
 rec.onerror=()=>{};
-try{rec.start();rec.active=true;orb.classList.add('listen')}catch(e){}}
+try{rec.start();rec.active=true;$('orb').classList.add('listen')}catch(e){}}
 $('hf').onclick=()=>{
-if(!SR){add('Voice input needs Google Chrome or Edge, sir. Typing still works.','j');return}
-always=!always;$('hf').classList.toggle('on',always);$('hf').textContent='Hands-free: '+(always?'on (say Jarvis)':'off');
+if(!SR){alert('Voice input needs Google Chrome or Edge. Typing still works.');return}
+always=!always;$('hf').classList.toggle('on',always);$('hf').textContent='Hands-free: '+(always?'on':'off');
 try{Notification.requestPermission()}catch(e){}
 if(always)startRec();else if(rec)try{rec.abort()}catch(e){}};
 $('mk').onclick=()=>{
-if(!SR){add('Voice input needs Google Chrome or Edge, sir.','j');return}
-const r=new SR();r.lang='en-US';r.onresult=e=>run(e.results[0][0].transcript.trim());r.onend=()=>orb.classList.remove('listen');
-orb.classList.add('listen');try{r.start()}catch(e){}};
+if(!SR){alert('Voice input needs Google Chrome or Edge.');return}
+const r=new SR();r.lang='en-US';r.onresult=e=>run(e.results[0][0].transcript.trim());r.onend=()=>$('orb').classList.remove('listen');
+$('orb').classList.add('listen');try{r.start()}catch(e){}};
 const send=()=>{const v=$('in').value.trim();if(v){$('in').value='';run(v)}};
 $('go').onclick=send;$('in').onkeydown=e=>{if(e.key=='Enter')send()};
 $('gear').onclick=()=>{$('set').hidden=!$('set').hidden};
 $('key').value=cfg.key||'';$('mute').checked=!!cfg.mute;
-$('save').onclick=()=>{cfg.key=$('key').value.trim();cfg.mute=$('mute').checked;sv();$('set').hidden=true;add('Settings saved, sir.','j')};
-$('wipe').onclick=()=>{hist=[];notes=[];sv();log.innerHTML='';add('Memory erased.','j')};
+$('save').onclick=()=>{cfg.key=$('key').value.trim();cfg.mute=$('mute').checked;save();$('set').hidden=true};
+$('wipe').onclick=()=>{if(confirm('Reset the whole office, chats, tasks and reports?')){S={agents:DEF,chats:{},tasks:[],reports:[]};cur='jarvis';save();renderRoster();show('chat')}};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-add('JARVIS online. Type below, press Talk, or switch on Hands-free and say: Jarvis, what is the weather?'+(cfg.key?'':' For general conversation I need a free Gemini key: open Settings.'),'j');
+const st=$('st');
+renderRoster();renderChat();if(!cfg.key)$('set').hidden=false;
 </script>
 </body>
 </html>
